@@ -54,18 +54,36 @@ class KhiinInputController: IMKInputController {
     }
 
     override func menu() -> NSMenu! {
-        // 创建自定义菜单项
+        let khiinMenu = NSMenu()
+
+        // Informational version row (disabled). Shows the bundle version plus
+        // the build time, so it is clear exactly which build is running even
+        // across rebuilds of the same version number.
+        let version = Bundle.main.infoDictionary?["CFBundleShortVersionString"]
+            as? String ?? "?"
+        var versionTitle = "Khíín \(version)"
+        if let exec = Bundle.main.executableURL,
+            let attrs = try? FileManager.default
+                .attributesOfItem(atPath: exec.path),
+            let built = attrs[.modificationDate] as? Date {
+            let fmt = DateFormatter()
+            fmt.dateFormat = "yyyy-MM-dd HH:mm"
+            versionTitle += "  (\(fmt.string(from: built)))"
+        }
+        // action: nil leaves the item disabled (greyed) via auto-enabling.
+        khiinMenu.addItem(
+            NSMenuItem(title: versionTitle, action: nil, keyEquivalent: ""))
+        khiinMenu.addItem(.separator())
+
         let settingMenuItem = NSMenuItem(
             title: "Settings..",
             action: #selector(self.openSettingApp),
             keyEquivalent: ""
         )
         settingMenuItem.target = self
-        
-        let khiinMenu = NSMenu();
         khiinMenu.addItem(settingMenuItem)
 
-        return khiinMenu;
+        return khiinMenu
     }
 
     func isEdited() -> Bool {
@@ -282,33 +300,44 @@ class KhiinInputController: IMKInputController {
     }
 
     @objc func openSettingApp() {
-        let mainBundle = Bundle.main
-        let appPath = mainBundle.bundleURL.appendingPathComponent("Contents/Applications/khiin_helper.app").path
+        let helperURL = Bundle.main.bundleURL
+            .appendingPathComponent("Contents/Applications/khiin_helper.app")
 
-        guard let bundle = Bundle(path: appPath),
-            let executablePath = bundle.executableURL?.path else {
+        guard FileManager.default.fileExists(atPath: helperURL.path) else {
             log.debug("Can't find helper app.")
             return
         }
-        
-        let process = Process()
-        process.executableURL = URL(fileURLWithPath: executablePath)
-        
-        process.terminationHandler = { proc in
-            DispatchQueue.main.async {
-                EngineController.instance.reloadSettings()
-                log.debug("Run helper exit code: \(proc.terminationStatus)")
+
+        // Launch the helper through LaunchServices so it runs as its own GUI
+        // app. Running its executable directly (via Process) as a child of this
+        // background-only input method makes the Tauri/WebKit helper hang.
+        let center = NSWorkspace.shared.notificationCenter
+        center.removeObserver(
+            self, name: NSWorkspace.didTerminateApplicationNotification,
+            object: nil)
+        center.addObserver(
+            self, selector: #selector(helperDidTerminate(_:)),
+            name: NSWorkspace.didTerminateApplicationNotification, object: nil)
+
+        NSWorkspace.shared.openApplication(
+            at: helperURL, configuration: NSWorkspace.OpenConfiguration()
+        ) { _, error in
+            if let error = error {
+                log.debug("Run helper error: \(error)")
             }
         }
+    }
 
-        do {
-            try process.run()
-            // process.waitUntilExit()
-            // EngineController.instance.reloadSettings()
-            // log.debug("Run helper exit code:\(process.terminationStatus)")
-        } catch {
-            log.debug("Run helper error:\(error)")
-        }
+    // Reload engine settings once the helper quits so edits take effect.
+    @objc private func helperDidTerminate(_ note: Notification) {
+        let app = note.userInfo?[NSWorkspace.applicationUserInfoKey]
+            as? NSRunningApplication
+        guard app?.bundleIdentifier == "app.khiin" else { return }
+        EngineController.instance.reloadSettings()
+        log.debug("Helper quit; settings reloaded.")
+        NSWorkspace.shared.notificationCenter.removeObserver(
+            self, name: NSWorkspace.didTerminateApplicationNotification,
+            object: nil)
     }
     //    override func inputText(_ string: String!, client sender: Any!) -> Bool {
     //        log.debug("inputText: \(string ?? "n/a")")

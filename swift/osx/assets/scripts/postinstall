@@ -8,6 +8,19 @@ osascript -e 'tell application id "app.khiin.inputmethod.khiin" to if it is runn
 
 mkdir -p "/Users/${user}/Library/Input Methods"
 chown -R ${user}:staff /tmp/KhiinPJH.app
+rm -rf "/Users/${user}/Library/Input Methods/KhiinPJH.app"
 mv /tmp/KhiinPJH.app "/Users/${user}/Library/Input Methods/KhiinPJH.app"
+
+# Refresh Launch Services so the (possibly upgraded) bundle is re-registered.
+# Without this, replacing a previously installed version leaves stale input
+# source metadata: TIS still believes the old source is enabled, so the new one
+# never appears in the "+" add list nor in the active input source list.
+lsregister="/System/Library/Frameworks/CoreServices.framework/Versions/A/Frameworks/LaunchServices.framework/Versions/A/Support/lsregister"
+/usr/bin/sudo -u "${user}" "${lsregister}" -f "/Users/${user}/Library/Input Methods/KhiinPJH.app"
+
+# Launch the input method once as the logged-in user. On launch it calls
+# TISRegisterInputSource on itself, which makes it appear in the input source
+# list immediately, without requiring a log out / log in.
+/usr/bin/sudo -u "${user}" /usr/bin/open "/Users/${user}/Library/Input Methods/KhiinPJH.app"
 
 exit 0

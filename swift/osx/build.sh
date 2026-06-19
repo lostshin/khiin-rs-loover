@@ -21,6 +21,7 @@ else
 fi
 
 app_name=KhiinPJH
+version=0.3.3
 build_dir=.build/artifacts/$BUILD_DIR
 universal_dir=.build/universal-macosx/$BUILD_DIR
 assets_dir=assets
@@ -81,6 +82,25 @@ if [ -d $helper_app ]; then
 else
     echo "warning: please build helper_app $helper_app"
 fi
+
+# Stamp the real version into the bundle so the IME menu (and Info.plist) shows
+# the same version as the package. The asset Info.plist keeps a stale 0.1.0
+# placeholder; do this before signing so the sealed Info.plist carries it.
+/usr/libexec/PlistBuddy -c "Set :CFBundleShortVersionString $version" "$contents_dir/Info.plist"
+/usr/libexec/PlistBuddy -c "Set :CFBundleVersion $version" "$contents_dir/Info.plist"
+
+# Code-sign the bundle. The swift/lipo output only carries a linker ad-hoc
+# signature whose identifier is the executable name and whose Info.plist is not
+# sealed; recent macOS will then refuse to register/load it as an input method.
+# Re-sign nested code (the helper) first, then the outer .app, so the Info.plist
+# is sealed and the identifier is taken from each CFBundleIdentifier. Ad-hoc (-)
+# signing here; use a Developer ID identity for public distribution.
+if [ -d "$app_dir/khiin_helper.app" ]; then
+    codesign --force --sign - "$app_dir/khiin_helper.app"
+fi
+codesign --force --sign - "$bundle_dir"
+codesign --verify --strict "$bundle_dir"
+
 # Move it to the user's input method folder
 killall -9 $app_name || true
 cp -r $bundle_dir "$im_dir"
@@ -92,7 +112,7 @@ pkgbuild \
     --info assets/PackageInfo \
     --root $build_dir/KhiinPJH.app \
     --identifier app.khiin.inputmethod.khiin \
-    --version "0.3.3" \
+    --version "$version" \
     --install-location "/tmp/KhiinPJH.app" \
     --scripts assets/scripts \
-    "$build_dir/KhiinPJH-0.3.3.pkg"
+    "$build_dir/KhiinPJH-$version.pkg"

@@ -1,4 +1,5 @@
 import AppKit
+import Carbon
 import InputMethodKit
 import SwiftyBeaver
 
@@ -26,6 +27,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             Bundle.main.infoDictionary?["InputMethodConnectionName"] as? String
         let identifier = Bundle.main.bundleIdentifier
         let _ = IMKServer(name: name, bundleIdentifier: identifier)
+
+        // Register this bundle as an input source so a freshly installed copy
+        // shows up in the input source list without a log out / log in. The
+        // installer copies the bundle into ~/Library/Input Methods but never
+        // registers it with the Text Input system; launching once self-registers
+        // here. TISRegisterInputSource is idempotent.
+        let status = TISRegisterInputSource(Bundle.main.bundleURL as CFURL)
+        log.debug("TISRegisterInputSource status: \(status)")
 
         log.debug("IMKServer initialized")
     }
