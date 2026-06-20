@@ -7,6 +7,7 @@
     import { showToast } from "$lib/toast";
     import SettingsGroup from "$lib/SettingsGroup.svelte";
     import SettingsRow from "$lib/SettingsRow.svelte";
+    import Segmented from "$lib/Segmented.svelte";
 
     const sel =
         "rounded-md border border-gray-300 bg-white py-1 pl-2 pr-7 text-sm focus:border-gray-400 focus:outline-none focus:ring-1 focus:ring-gray-300 disabled:opacity-50 disabled:cursor-not-allowed";
@@ -163,6 +164,16 @@
         await updateSettings();
     }
 
+    // Generic store update used by the macOS segmented controls. Keeps the
+    // Windows <select> handlers (which read event.target.value) untouched.
+    async function setInputSetting(key, value) {
+        settings.update((settings) => {
+            settings.input_settings[key] = value;
+            return settings;
+        });
+        await updateSettings();
+    }
+
     async function updateSettings() {
         try {
             await invoke("update_settings", {
@@ -183,44 +194,56 @@
         label={$_("page.input.input-mode")}
         description={$_("page.input.input-mode-desc")}
     >
-        <select class={sel} bind:value={input_mode} on:change={inputModeChanged}>
-            <option value="classic">{$_("page.input.classic")}</option>
-            <option value="manual">{$_("page.input.manual")}</option>
-        </select>
+        <Segmented
+            bind:value={input_mode}
+            options={[
+                { value: "classic", label: $_("page.input.classic") },
+                { value: "manual", label: $_("page.input.manual") },
+            ]}
+            onChange={(v) => setInputSetting("input_mode", v)}
+        />
     </SettingsRow>
     <SettingsRow
         label={$_("page.input.tone-mode")}
         description={$_("page.input.tone-mode-desc")}
     >
-        <select
-            class={sel}
+        <Segmented
             bind:value={tone_mode}
             disabled={tone_mode_disabled}
-            on:change={toneModeChanged}
-        >
-            <option value="numeric">{$_("page.input.numeric")}</option>
-            <option value="telex">{$_("page.input.telex")}</option>
-        </select>
+            options={[
+                { value: "numeric", label: $_("page.input.numeric") },
+                { value: "telex", label: $_("page.input.telex") },
+            ]}
+            onChange={(v) => setInputSetting("tone_mode", v)}
+        />
     </SettingsRow>
     <SettingsRow
         label={$_("page.input.output-mode")}
         description={$_("page.input.output-mode-desc")}
         example="台語 ↔ tâi-gí"
     >
-        <select class={sel} bind:value={output_mode} on:change={outputModeChanged}>
-            <option value="lomaji">{$_("page.input.lomaji")}</option>
-            <option value="hanji">{$_("page.input.hanji")}</option>
-        </select>
+        <Segmented
+            bind:value={output_mode}
+            options={[
+                { value: "lomaji", label: $_("page.input.lomaji") },
+                { value: "hanji", label: $_("page.input.hanji") },
+            ]}
+            onChange={(v) => setInputSetting("output_mode", v)}
+        />
     </SettingsRow>
     <SettingsRow
         label={$_("page.input.khin-mode")}
         description={$_("page.input.khin-mode-desc")}
     >
-        <select class={sel} bind:value={khin_mode} on:change={khinModeChanged}>
-            <option value="khinless">{$_("page.input.khinless")}</option>
-            <option value="hyphen">--</option>
-            <option value="dot"> ·</option>
-        </select>
+        <Segmented
+            bind:value={khin_mode}
+            options={[
+                { value: "khinless", label: $_("page.input.khinless") },
+                { value: "hyphen", label: "--" },
+                { value: "dot", label: " ·" },
+            ]}
+            onChange={(v) => setInputSetting("khin_mode", v)}
+        />
     </SettingsRow>
     <SettingsRow
         label={$_("page.input.switch-mode")}
