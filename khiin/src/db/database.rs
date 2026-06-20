@@ -75,13 +75,22 @@ impl Database {
 
     fn open(mut self) -> Result<Self> {
         self.restore()?;
-        self.migrate_to_latest()?;
+        if self.migrate_to_latest()? {
+            self.backup()?;
+        }
         Ok(self)
     }
 
-    fn migrate_to_latest(&mut self) -> Result<()> {
+    fn migrate_to_latest(&mut self) -> Result<bool> {
+        let previous_version = self.user_version()?;
         MIGRATIONS.to_latest(&mut self.conn)?;
-        Ok(())
+        Ok(self.user_version()? > previous_version)
+    }
+
+    fn user_version(&self) -> Result<i64> {
+        Ok(self
+            .conn
+            .pragma_query_value(None, "user_version", |row| row.get(0))?)
     }
 
     fn set_pragmas(&self) -> Result<()> {
@@ -448,6 +457,22 @@ mod tests {
         assert!(!index_exists(&db, "input_numeric_covering_index"));
         assert!(!index_exists(&db, "input_telex_covering_index"));
         assert!(index_exists(&db, "key_sequences_lookup_index"));
+    }
+
+    #[test]
+    fn opening_v2_database_persists_migration() {
+        let (_temp_dir, db_path) = create_version_2_database();
+
+        {
+            let db = Database::new(&db_path).unwrap();
+            assert_eq!(user_version(&db), 3);
+        }
+
+        let persisted = Connection::open(&db_path).unwrap();
+        assert_eq!(user_version(&persisted), 3);
+        assert!(!index_exists(&persisted, "input_numeric_covering_index"));
+        assert!(!index_exists(&persisted, "input_telex_covering_index"));
+        assert!(index_exists(&persisted, "key_sequences_lookup_index"));
     }
 
     #[test]
