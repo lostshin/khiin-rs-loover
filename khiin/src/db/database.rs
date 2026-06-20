@@ -24,6 +24,7 @@ static MIGRATIONS: Lazy<Migrations> = Lazy::new(|| {
     Migrations::new(vec![
         M::up(include_str!("migrations/001/up.sql")),
         M::up(include_str!("migrations/002/up.sql")),
+        M::up(include_str!("migrations/003/up.sql")),
     ])
 });
 
@@ -384,6 +385,70 @@ fn ensure_dirs(db_file: &PathBuf) -> Result<()> {
 mod tests {
     use super::*;
     use crate::tests::*;
+    use tempfile::TempDir;
+
+    fn create_version_2_database() -> (TempDir, PathBuf) {
+        let temp_dir = tempfile::tempdir().unwrap();
+        let db_path = temp_dir.path().join("khiin.db");
+        let conn = Connection::open(&db_path).unwrap();
+
+        conn.execute_batch(
+            r#"
+            create table key_sequences (
+                "input_id" integer not null,
+                "key_sequence" text not null,
+                "input_type" integer not null,
+                "n_syls" integer not null,
+                "p" real not null
+            );
+            create index input_numeric_covering_index
+                on key_sequences ("numeric", "input_id");
+            create index input_telex_covering_index
+                on key_sequences ("telex", "input_id");
+            create index key_sequences_lookup_index
+                on key_sequences (
+                    "key_sequence",
+                    "input_type",
+                    "input_id",
+                    "n_syls"
+                );
+            pragma user_version = 2;
+            "#,
+        )
+        .unwrap();
+
+        drop(conn);
+        (temp_dir, db_path)
+    }
+
+    fn user_version(conn: &Connection) -> i64 {
+        conn.pragma_query_value(None, "user_version", |row| row.get(0))
+            .unwrap()
+    }
+
+    fn index_exists(conn: &Connection, name: &str) -> bool {
+        conn.query_row(
+            "select exists(
+                select 1 from sqlite_master
+                where type = 'index' and name = ?1
+            )",
+            [name],
+            |row| row.get(0),
+        )
+        .unwrap()
+    }
+
+    #[test]
+    fn opening_v2_database_applies_cleanup_migration() {
+        let (_temp_dir, db_path) = create_version_2_database();
+
+        let db = Database::new(&db_path).unwrap();
+
+        assert_eq!(user_version(&db), 3);
+        assert!(!index_exists(&db, "input_numeric_covering_index"));
+        assert!(!index_exists(&db, "input_telex_covering_index"));
+        assert!(index_exists(&db, "key_sequences_lookup_index"));
+    }
 
     #[test]
     fn it_finds_the_db_file() {
