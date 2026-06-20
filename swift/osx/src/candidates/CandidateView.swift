@@ -53,10 +53,8 @@ struct CandidateItem: View {
                 )
                 .frame(width: 4, height: 16)
 
-                if index > 0 && focus != -1 {
-                    Text("\(index).")
-                        .frame(minWidth: 16)
-                }
+                Text(candidateShortcutLabel(for: index))
+                    .frame(minWidth: 16)
                 Text(candidate.value).font(.system(size: valueFontSize))
                 formatAnnotation(from: candidate.annotation, fontSize: annotationFontSize)
             }

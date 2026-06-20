@@ -46,6 +46,11 @@ let package = Package(
                 )
             ],
             path: "src"
+        ),
+        .testTarget(
+            name: "KhiinPJHTests",
+            dependencies: ["KhiinPJH"],
+            path: "Tests"
         )
     ]
 )
