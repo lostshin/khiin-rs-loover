@@ -9,7 +9,6 @@ class KhiinInputController: IMKInputController {
     // `candidateViewModel`, so content updates reactively; rebuilding it on every
     // keystroke (the old behavior) made typing laggy.
     var candidateHost: NSViewController? = nil
-    var candidateLeadingConstraint: NSLayoutConstraint? = nil
     var candidateVerticalConstraint: NSLayoutConstraint? = nil
     var candidateAnchoredTop: Bool? = nil
 

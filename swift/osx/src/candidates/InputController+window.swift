@@ -25,8 +25,13 @@ extension KhiinInputController {
             host.view.translatesAutoresizingMaskIntoConstraints = false
             self.window?.contentView?.addSubview(host.view)
             self.window?.contentViewController?.addChild(host)
+            // The leading edge never changes; pin it once. Only the vertical
+            // anchor flips (top vs bottom), handled per-reset below.
+            if let contentView = self.window?.contentView {
+                host.view.leadingAnchor.constraint(
+                    equalTo: contentView.leadingAnchor).isActive = true
+            }
             self.candidateHost = host
-            self.candidateAnchoredTop = nil  // force constraint setup below
         }
     }
 
@@ -38,23 +43,18 @@ extension KhiinInputController {
 
         // Anchor the content to the top of the window when it sits below the
         // caret, or to the bottom when it sits above (the near-screen-edge
-        // fallback). Only rebuild constraints when the side actually flips.
+        // fallback). Only rebuild the constraint when the side actually flips.
         if let contentView = self.window?.contentView,
             let hostView = self.candidateHost?.view {
             let origin = self.currentOrigin ?? self.currentClient?.position ?? .zero
             let anchorTop = origin.y > frame.minY
             if self.candidateAnchoredTop != anchorTop {
                 self.candidateAnchoredTop = anchorTop
-                self.candidateLeadingConstraint?.isActive = false
                 self.candidateVerticalConstraint?.isActive = false
-
-                let leading = hostView.leadingAnchor.constraint(
-                    equalTo: contentView.leadingAnchor)
                 let vertical = anchorTop
                     ? hostView.topAnchor.constraint(equalTo: contentView.topAnchor)
                     : hostView.bottomAnchor.constraint(equalTo: contentView.bottomAnchor)
-                NSLayoutConstraint.activate([leading, vertical])
-                self.candidateLeadingConstraint = leading
+                vertical.isActive = true
                 self.candidateVerticalConstraint = vertical
             }
         }
