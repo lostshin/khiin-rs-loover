@@ -329,6 +329,13 @@ Package.resolved
 # Tauri
 app/dist
 app/src-tauri/icons
+app/src-tauri/gen/schemas
+
+# Built packages (release artifacts, not tracked)
+*.pkg
+
+# Tooling caches
+**/.impeccable/
 
 # Svelte
 .DS_Store

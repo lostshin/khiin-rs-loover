@@ -2,7 +2,14 @@
     import { _ } from "svelte-i18n"; // import Settings from "../lib/Settings.svelte";
     import Toggle from "../../lib/Toggle.svelte";
     import { settings, count } from "../store.js";
-    import { invoke } from "@tauri-apps/api/tauri";
+    import { invoke } from "@tauri-apps/api/core";
+    import { isMac } from "$lib/platform";
+    import { showToast } from "$lib/toast";
+    import SettingsGroup from "$lib/SettingsGroup.svelte";
+    import SettingsRow from "$lib/SettingsRow.svelte";
+
+    const sel =
+        "rounded-md border border-gray-300 bg-white py-1 pl-2 pr-7 text-sm focus:border-gray-400 focus:outline-none focus:ring-1 focus:ring-gray-300 disabled:opacity-50 disabled:cursor-not-allowed";
 
     let double_hyphen_to_khin = false;
     let auto_capitalization = false;
@@ -161,12 +168,90 @@
             await invoke("update_settings", {
                 settings: JSON.stringify($settings),
             });
+            showToast($_("global.toast.saved"));
         } catch (error) {
             console.error("Failed to update settings:", error);
         }
     }
 </script>
 
+{#if $isMac}
+<h1 class="mb-6 text-2xl font-semibold text-gray-800">{$_("global.nav.input")}</h1>
+
+<SettingsGroup>
+    <SettingsRow
+        label={$_("page.input.input-mode")}
+        description={$_("page.input.input-mode-desc")}
+    >
+        <select class={sel} bind:value={input_mode} on:change={inputModeChanged}>
+            <option value="classic">{$_("page.input.classic")}</option>
+            <option value="manual">{$_("page.input.manual")}</option>
+        </select>
+    </SettingsRow>
+    <SettingsRow
+        label={$_("page.input.tone-mode")}
+        description={$_("page.input.tone-mode-desc")}
+    >
+        <select
+            class={sel}
+            bind:value={tone_mode}
+            disabled={tone_mode_disabled}
+            on:change={toneModeChanged}
+        >
+            <option value="numeric">{$_("page.input.numeric")}</option>
+            <option value="telex">{$_("page.input.telex")}</option>
+        </select>
+    </SettingsRow>
+    <SettingsRow
+        label={$_("page.input.output-mode")}
+        description={$_("page.input.output-mode-desc")}
+        example="台語 ↔ tâi-gí"
+    >
+        <select class={sel} bind:value={output_mode} on:change={outputModeChanged}>
+            <option value="lomaji">{$_("page.input.lomaji")}</option>
+            <option value="hanji">{$_("page.input.hanji")}</option>
+        </select>
+    </SettingsRow>
+    <SettingsRow
+        label={$_("page.input.khin-mode")}
+        description={$_("page.input.khin-mode-desc")}
+    >
+        <select class={sel} bind:value={khin_mode} on:change={khinModeChanged}>
+            <option value="khinless">{$_("page.input.khinless")}</option>
+            <option value="hyphen">--</option>
+            <option value="dot"> ·</option>
+        </select>
+    </SettingsRow>
+    <SettingsRow
+        label={$_("page.input.switch-mode")}
+        description={$_("page.input.switch-mode-desc")}
+    >
+        {#await invoke("is_windows") then is_windows_os}
+            <select class={sel} bind:value={mode_shortcut} on:change={modeShortcutChanged}>
+                {#if is_windows_os}
+                    <option value="default">{$_("page.input.ctrl-backtick")}</option>
+                    <option value="shift">{$_("page.input.shift")}</option>
+                {:else}
+                    <option value="default">{$_("page.input.alt-backtick")}</option>
+                {/if}
+            </select>
+        {/await}
+    </SettingsRow>
+</SettingsGroup>
+
+<SettingsGroup>
+    <a
+        href="/keys"
+        class="flex items-center justify-between gap-4 px-4 py-3 transition-colors hover:bg-gray-50"
+    >
+        <div class="min-w-0">
+            <div class="text-sm text-gray-800">{$_("page.keys.title")}</div>
+            <div class="mt-0.5 text-xs text-gray-400">{$_("page.keys.desc")}</div>
+        </div>
+        <i class="bx bx-chevron-right flex-none text-xl text-gray-400" />
+    </a>
+</SettingsGroup>
+{:else}
 <h1 class="text-3xl mb-3">{$_("page.input.title")}</h1>
 <div class="mt-8 max-w-md">
     <div class="grid grid-cols-1 gap-6">
@@ -404,6 +489,7 @@
     </div>
 </div>
 <br>
+{/if}
 <style>
     select[disabled] {
         color: #aaa;

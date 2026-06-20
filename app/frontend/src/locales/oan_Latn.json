@@ -3,12 +3,18 @@
         "title": "Khíín",
         "nav": {
             "home": "",
+            "general": "It-poaⁿ",
+            "input": "Ji̍p Jī",
+            "keys": "Àn-kiān",
             "about": "Koan-hē",
             "appearance": "Kài-bīn Siat-tēng",
             "input-settings": "Ji̍p Jī Siat-tēng",
             "dictionary": "Jī-sû-khò͘",
             "donate": "Kià-hù",
             "github": "GitHub"
+        },
+        "toast": {
+            "saved": "Kì khí-lâi"
         }
     },
     "page": {
@@ -16,6 +22,8 @@
             "title": "Khíín Tâi-gí Ji̍p Jī Ke-si"
         },
         "appearance": {
+            "language-desc": "Chit ê siat-tēng app beh hián-sī ê gí-giân.",
+            "font-size-desc": "Kéng-jī soán-tan ê jī tōa-sè.",
             "title": "Kài-bīn Siat-tēng",
             "theme": "Sek-chúi",
             "auto": "Chū-tōng",
@@ -62,10 +70,24 @@
             "khin-key": "ENCLITICS (\"Khin-tiāu\")",
             "hyphen-key": "Liân-oe̍h",
             "done-key": "(Liâm Jī) Chhiat Im-chat",
-            "none": "(bô beh iōng)"
+            "none": "(bô beh iōng)",
+            "input-mode-desc": "Chū-tōng: it-bīn phah it-bīn ōaⁿ; Chū-iû: ta̍k im-chat ka-tī chiáng-ak.",
+            "tone-mode-desc": "Iōng sò͘-jī kiān (Sò͘-jī) ia̍h-sī jī-bó kiān (Telex) phah siaⁿ-tiāu.",
+            "output-mode-desc": "Kéng-jī beh hián-sī Lô-má-jī (Lô) ia̍h-sī Hàn-jī.",
+            "khin-mode-desc": "Khin-siaⁿ (khin) kì-hō beh án-chóaⁿ hián-sī.",
+            "switch-mode-desc": "Phah-khui / koaiⁿ Khíín ê khoài-chia̍t kiān."
         },
         "dictionary": {
             "title": "Jī-sû-khò͘"
+        },
+        "keys": {
+            "title": "Àn-kiān Siat-tēng",
+            "desc": "Siat-tēng Telex bô͘-sek ē-té, ta̍k ê siaⁿ-tiāu iōng tó chi̍t ê jī-bó kiān."
+        },
+        "about": {
+            "title": "Koan-hē",
+            "version": "Pán-pún",
+            "description": "Khíín Tâi-gí Ji̍p Jī Ke-si"
         }
     }
 }

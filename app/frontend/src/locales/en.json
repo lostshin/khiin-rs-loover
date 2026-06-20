@@ -4,11 +4,17 @@
         "nav": {
             "home": "",
             "about": "About",
+            "general": "General",
+            "input": "Input",
+            "keys": "Keys",
             "appearance": "Interface Settings",
             "input-settings": "Input Settings",
             "dictionary": "Dictionary",
             "donate": "Donate",
             "github": "Github"
+        },
+        "toast": {
+            "saved": "Saved"
         }
     },
     "page": {
@@ -22,7 +28,9 @@
             "light": "Light",
             "dark": "Dark",
             "language": "Interface Language",
+            "language-desc": "Display language for this settings app.",
             "font-size": "Menu Font Size",
+            "font-size-desc": "Text size of the candidate selection menu.",
             "sm": "Smaller",
             "lg": "Larger",
             "font": "Candidate Font"
@@ -62,10 +70,24 @@
             "khin-key": "Enclitics (Neutral Tone)",
             "hyphen-key": "Hyphen",
             "done-key": "Syllable Break (New Syllable)",
-            "none": "(none)"
+            "none": "(none)",
+            "input-mode-desc": "Standard converts automatically as you type; Manual lets you control each syllable.",
+            "tone-mode-desc": "Type tones with number keys (Numeric) or letter keys (Telex).",
+            "output-mode-desc": "Show candidates as romanization (Lô) or Hàn characters.",
+            "khin-mode-desc": "How the neutral-tone (khin) marker is shown.",
+            "switch-mode-desc": "Keyboard shortcut to turn Khíín on and off."
         },
         "dictionary": {
             "title": "Dictionary"
+        },
+        "keys": {
+            "title": "Key Bindings",
+            "desc": "Assign which letter keys produce each tone in Telex mode."
+        },
+        "about": {
+            "title": "About",
+            "version": "Version",
+            "description": "Khíín Taiwanese (Hō-ló) Input Method"
         }
     }
 }

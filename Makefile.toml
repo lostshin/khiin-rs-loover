@@ -76,7 +76,7 @@ args = ["install"]
 
 [tasks.install-tauri-cli]
 private = true
-install_script = "cargo install tauri-cli"
+install_script = "cargo install tauri-cli --version '^2'"
 
 [tasks.tauri-icon]
 category = "Build"

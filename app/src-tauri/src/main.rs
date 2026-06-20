@@ -6,10 +6,10 @@ use std::env;
 use std::fs::File;
 use std::io::Read;
 use std::sync::RwLock;
-use tauri::Manager;
+use tauri::Emitter;
 use tauri::State;
-use tauri::StateManager;
-use tauri_plugin_log::LogTarget;
+use tauri_plugin_log::Target;
+use tauri_plugin_log::TargetKind;
 
 use khiin_settings::AppSettings;
 use khiin_settings::SettingsManager;
@@ -27,11 +27,15 @@ struct Payload {
 
 // Learn more about Tauri commands at https://tauri.app/v1/guides/features/command
 #[tauri::command]
-fn load_settings(state: State<SettingsStore>, window: tauri::Window) -> Result<String, String> {
+fn load_settings(
+    state: State<SettingsStore>,
+    window: tauri::Window,
+) -> Result<String, String> {
     if let Ok(reader) = state.store.read() {
         serde_json::to_string(&reader.settings).map_err(|e| e.to_string())
     } else {
-        serde_json::to_string(&AppSettings::default()).map_err(|e| e.to_string())
+        serde_json::to_string(&AppSettings::default())
+            .map_err(|e| e.to_string())
     }
 }
 
@@ -53,6 +57,11 @@ fn update_settings(
 #[tauri::command]
 fn is_windows() -> bool {
     cfg!(target_os = "windows")
+}
+
+#[tauri::command]
+fn app_version() -> String {
+    env!("CARGO_PKG_VERSION").to_string()
 }
 
 fn emit_settings(settings: &AppSettings, window: tauri::Window) {
@@ -82,17 +91,18 @@ fn main() {
     let settings_manager = load_settings_manager();
 
     tauri::Builder::default()
+        .plugin(tauri_plugin_shell::init())
         .plugin(tauri_plugin_single_instance::init(|app, argv, cwd| {
             println!("{}, {argv:?}, {cwd}", app.package_info().name);
-            app.emit_all("single-instance", Payload { args: argv, cwd })
+            app.emit("single-instance", Payload { args: argv, cwd })
                 .unwrap();
         }))
         .plugin(
-            tauri_plugin_log::Builder::default()
+            tauri_plugin_log::Builder::new()
                 .targets([
-                    LogTarget::LogDir,
-                    LogTarget::Stdout,
-                    LogTarget::Webview,
+                    Target::new(TargetKind::LogDir { file_name: None }),
+                    Target::new(TargetKind::Stdout),
+                    Target::new(TargetKind::Webview),
                 ])
                 .build(),
         )
@@ -101,6 +111,7 @@ fn main() {
             load_settings,
             update_settings,
             is_windows,
+            app_version,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

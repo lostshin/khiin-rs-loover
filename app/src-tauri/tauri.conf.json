@@ -1,65 +1,56 @@
 {
-    "build": {
-        "beforeDevCommand": "npm run --prefix frontend dev",
-        "beforeBuildCommand": "npm run --prefix frontend build",
-        "devPath": "http://localhost:5173",
-        "distDir": "../build",
-        "withGlobalTauri": true
+  "build": {
+    "beforeDevCommand": "npm run dev",
+    "beforeBuildCommand": "npm run build",
+    "frontendDist": "../build",
+    "devUrl": "http://localhost:5173"
+  },
+  "bundle": {
+    "active": true,
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.icns",
+      "icons/icon.ico"
+    ],
+    "windows": {
+      "certificateThumbprint": null,
+      "digestAlgorithm": "sha256",
+      "timestampUrl": ""
     },
-    "package": {
-        "productName": "khiin_helper",
-        "version": "0.1.0"
+    "longDescription": "Khiin Taiwanese IME",
+    "targets": "all",
+    "macOS": {
+      "entitlements": null,
+      "exceptionDomain": "",
+      "frameworks": [],
+      "providerShortName": null,
+      "signingIdentity": null
     },
-    "tauri": {
-        "allowlist": {
-            "all": false,
-            "shell": {
-                "all": false,
-                "open": true
-            }
-        },
-        "bundle": {
-            "active": true,
-            "icon": [
-                "icons/32x32.png",
-                "icons/128x128.png",
-                "icons/128x128@2x.png",
-                "icons/icon.icns",
-                "icons/icon.ico"
-            ],
-            "identifier": "app.khiin",
-            "longDescription": "Khiin Taiwanese IME",
-            "targets": "all",
-            "macOS": {
-                "entitlements": null,
-                "exceptionDomain": "",
-                "frameworks": [],
-                "providerShortName": null,
-                "signingIdentity": null
-            },
-            "resources": [],
-            "shortDescription": "",
-            "windows": {
-                "certificateThumbprint": null,
-                "digestAlgorithm": "sha256",
-                "timestampUrl": ""
-            }
-        },
-        "security": {
-            "csp": null
-        },
-        "updater": {
-            "active": false
-        },
-        "windows": [
-            {
-                "fullscreen": false,
-                "resizable": false,
-                "title": "Khíín 台語打字法",
-                "width": 800,
-                "height": 600,
-                "alwaysOnTop": true
-            }
-        ]
+    "resources": [],
+    "shortDescription": ""
+  },
+  "productName": "khiin_helper",
+  "mainBinaryName": "khiin_helper",
+  "version": "0.3.4",
+  "identifier": "app.khiin",
+  "plugins": {},
+  "app": {
+    "withGlobalTauri": true,
+    "windows": [
+      {
+        "fullscreen": false,
+        "resizable": false,
+        "title": "Khíín 台語打字法",
+        "width": 800,
+        "height": 600,
+        "alwaysOnTop": true,
+        "useHttpsScheme": true
+      }
+    ],
+    "security": {
+      "csp": null
     }
+  }
 }

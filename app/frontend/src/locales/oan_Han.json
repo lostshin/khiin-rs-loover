@@ -4,11 +4,17 @@
         "nav": {
             "home": "",
             "about": "關係",
+            "general": "一般",
+            "input": "入字",
+            "keys": "按鍵",
             "appearance": "界面設定",
             "input-settings": "入字設定",
             "dictionary": "字詞庫",
             "donate": "寄付",
             "github": "GitHub"
+        },
+        "toast": {
+            "saved": "記起來矣"
         }
     },
     "page": {
@@ -22,7 +28,9 @@
             "light": "光色",
             "dark": "暗色",
             "language": "界面語文",
+            "language-desc": "這个設定 app 欲顯示的語言。",
             "font-size": "Me-niú 大細字",
+            "font-size-desc": "揀字選單的字大細。",
             "sm": "細字",
             "lg": "大字",
             "font": "揀字字骨"
@@ -62,10 +70,24 @@
             "khin-key": "ENCLITICS (\"輕調\")",
             "hyphen-key": "連劃",
             "done-key": "(粘字) 切音節",
-            "none": "(無卜用)"
+            "none": "(無卜用)",
+            "input-mode-desc": "自動：一面拍一面換；自由：逐音節家己掌握。",
+            "tone-mode-desc": "用數字鍵（數字）抑是字母鍵（Telex）拍聲調。",
+            "output-mode-desc": "揀字欲顯示羅馬字（羅）抑是漢字。",
+            "khin-mode-desc": "輕聲（khin）記號欲按怎顯示。",
+            "switch-mode-desc": "拍開／關 Khíín 的快捷鍵。"
         },
         "dictionary": {
             "title": "字詞庫"
+        },
+        "keys": {
+            "title": "按鍵設定",
+            "desc": "設定 Telex 模式下，逐个聲調用佗一个字母鍵。"
+        },
+        "about": {
+            "title": "關係",
+            "version": "版本",
+            "description": "起引台語打字法"
         }
     }
 }

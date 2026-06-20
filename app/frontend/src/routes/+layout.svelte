@@ -3,11 +3,13 @@
     import "../services/i18n";
     import Sidebar from "$lib/Sidebar.svelte";
     import Spinner from "$lib/Spinner.svelte";
+    import Toast from "$lib/Toast.svelte";
+    import { isMac } from "$lib/platform";
     import { goto } from '$app/navigation';
     import { page } from '$app/stores';
     // import I18n from "$lib/i18n.svelte";
 
-    import { invoke } from "@tauri-apps/api/tauri";
+    import { invoke } from "@tauri-apps/api/core";
     // import { listen, type UnlistenFn } from '@tauri-apps/api/event'
     import { onMount, onDestroy } from "svelte";
     import { isLoading, locale } from "svelte-i18n";
@@ -70,5 +72,8 @@
         <div class="flex h-full w-full justify-center items-center border">
             <Spinner />
         </div>
+    {/if}
+    {#if $isMac}
+        <Toast />
     {/if}
 </div>
