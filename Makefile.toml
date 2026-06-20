@@ -249,7 +249,17 @@ rm -f swift/Shared/khiin.db
 [tasks.build-db]
 category = "Build"
 description = "Build khiin.db using the dbgen CLI tool"
-condition = { files_not_exist = ["resources/khiin.db"] }
+condition = { files_modified = { input = [
+    "Cargo.toml",
+    "khiin/Cargo.toml",
+    "khiin/dbgen/Cargo.toml",
+    "khiin/dbgen/src/**/*.rs",
+    "khiin/src/db/database.rs",
+    "khiin/src/db/init/**/*.rs",
+    "khiin/src/db/migrations/**/*.sql",
+    "data/data/conversions_all.csv",
+    "data/data/frequency.csv",
+], output = ["resources/khiin.db"] } }
 command = "cargo"
 args = [
     "run",
