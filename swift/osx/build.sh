@@ -21,7 +21,7 @@ else
 fi
 
 app_name=KhiinPJH
-version=0.3.4
+version=0.3.6
 build_dir=.build/artifacts/$BUILD_DIR
 universal_dir=.build/universal-macosx/$BUILD_DIR
 assets_dir=assets

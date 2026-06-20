@@ -1,6 +1,6 @@
 [package]
 name = "khiin_helper"
-version = "0.3.4"
+version = "0.3.6"
 description = "Khíín Desktop Companion App"
 authors = ["Ko An Ióng"]
 edition = "2021"
