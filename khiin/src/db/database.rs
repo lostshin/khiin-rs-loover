@@ -21,7 +21,10 @@ use super::models::KeyConversion;
 use super::models::KeySequence;
 
 static MIGRATIONS: Lazy<Migrations> = Lazy::new(|| {
-    Migrations::new(vec![M::up(include_str!("migrations/001/up.sql"))])
+    Migrations::new(vec![
+        M::up(include_str!("migrations/001/up.sql")),
+        M::up(include_str!("migrations/002/up.sql")),
+    ])
 });
 
 type Noop = Box<dyn Fn(Progress)>;
