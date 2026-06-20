@@ -5,6 +5,14 @@ import KhiinSwift
 class KhiinInputController: IMKInputController {
     lazy var window: NSWindow? = nil
 
+    // The candidate window's SwiftUI host is created once and reused. It observes
+    // `candidateViewModel`, so content updates reactively; rebuilding it on every
+    // keystroke (the old behavior) made typing laggy.
+    var candidateHost: NSViewController? = nil
+    var candidateLeadingConstraint: NSLayoutConstraint? = nil
+    var candidateVerticalConstraint: NSLayoutConstraint? = nil
+    var candidateAnchoredTop: Bool? = nil
+
     lazy var currentClient: IMKTextInput? = nil {
         didSet {
             if window != nil {
@@ -19,6 +27,11 @@ class KhiinInputController: IMKInputController {
 
     override func activateServer(_ sender: Any!) {
         Logger.setup()
+        // Re-read settings.toml whenever the IME regains focus so changes made
+        // in the helper (e.g. switching 自動/自由 input mode) take effect as soon
+        // as the user clicks back into a text field, instead of only after the
+        // helper is quit.
+        EngineController.instance.reloadSettings()
         EngineController.instance.reset()
         self.currentClient = sender as? IMKTextInput
         self.currentOrigin = self.currentClient?.position
