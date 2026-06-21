@@ -18,11 +18,11 @@ Khíín = cross-platform Taiwanese (Hō-ló / Tâi-gí) IME. Design: **one Rust 
 ```bash
 cargo make run          # build + run terminal IME (fastest way to exercise the engine)
 cargo make test         # engine unit tests (cargo test on khiin/Cargo.toml)
-cargo make rebuild-db   # regen resources/khiin.db after editing data/data/*.csv
+cargo make rebuild-db   # clean+regen resources/khiin.db (after editing *.csv, migration SQL, or dbgen)
 cargo make format       # rustfmt (nightly)
 ```
 Single test: `cargo test --manifest-path=khiin/Cargo.toml <name>`.
-**Tests/CLI need `target/debug/khiin.db`, but `cargo make test` does NOT build it.** Fresh checkout: `cargo make build-db && cargo make copy-db` (or `build-common`), else `Engine::new`→`None` and every engine test fails.
+**Tests/CLI need `target/debug/khiin.db`, but `cargo make test` does NOT build it.** Fresh checkout: `cargo make build-db && cargo make copy-db` (or `build-common`), else `Engine::new`→`None` and every engine test fails. `build-db` is `files_modified`-gated (CSVs, migration SQL, `database.rs`, dbgen) — edit one of those and it reruns; otherwise it logs `Skipping Task: build-db` (use `rebuild-db` to force). dbgen always builds a fresh, fully-migrated db, so editing migration SQL needs no manual clean.
 
 ### Per-platform (each runs only on its host OS)
 - **macOS IME:** `cargo make build-osx` — builds swift-bridge `.a` (**all 5 Apple `rustup` targets must be installed**, it always compiles iOS too), builds the Swift IME, **installs to `~/Library/Input Methods/`**, pkgbuilds `swift/osx/.build/artifacts/<debug|release>/KhiinPJH-<v>.pkg`. `--profile release` for release (overwrites an installed debug build).
@@ -40,9 +40,10 @@ Single test: `cargo test --manifest-path=khiin/Cargo.toml <name>`.
 ## Performance — candidate lookups MUST hit an index (fixed in 0.3.6)
 
 - **Symptom:** typing laggy. **Real cause is the engine DB, not the UI.** `conversion_lookups` is a VIEW (`key_sequences ⋈ inputs ⋈ conversions`) filtered by `key_sequence`; the only `key_sequences` indexes (`input_numeric/telex_covering_index`) reference **columns that no longer exist**, so the planner did a full `SCAN` of ~182k rows several times per keystroke (25–80 ms/key, worse as the buffer grows).
-- **Fix shipped:** migration `002` adds a covering index on `key_sequences(key_sequence, input_type, input_id, n_syls)` → 6 ms→0.04 ms/lookup, <0.4 ms/key. Baked into the db by `rebuild-db` (dbgen runs migrations) AND applied at runtime to existing installs (`Database::open` → `migrate_to_latest`, user_version 1→2). `build_sql_from_csv` only inserts (no table drops), so migrate-then-insert is safe.
+- **Fix shipped (0.3.6):** migration `002` adds a covering index on `key_sequences(key_sequence, input_type, input_id, n_syls)` (6 ms→0.04 ms/lookup, <0.4 ms/key) AND drops the stale `input_numeric/telex_covering_index`. Those named non-existent columns `"numeric"/"telex"`, but SQLite's double-quote→string-literal fallback indexed a *constant* instead of erroring → dead weight, not a usable index. dbgen bakes 002 in (`from_csv`→`migrate_to_latest`→insert = always a fresh fully-migrated db) AND it applies at runtime to existing installs (`Database::open`→`migrate_to_latest`, user_version→2).
+- **Migrations are append-only once released.** Don't edit a shipped migration to fix schema — existing installs only run migrations past their `user_version`, so the fix never reaches them; add the next number. (Editing the in-dev latest migration before release is fine.) Verify fast without a full build: `sqlite3 fresh.db < migrations/001/up.sql && sqlite3 fresh.db < 002/up.sql` then check `sqlite_master`; or build to temp: `cargo run --manifest-path=khiin/dbgen/Cargo.toml -- -c data/data/conversions_all.csv -f data/data/frequency.csv -o /tmp/x.db`.
 - **Rule:** before "optimizing" candidate code, `sqlite3 <db> "EXPLAIN QUERY PLAN <q>"` — you want `SEARCH … USING … INDEX`, not `SCAN`. The runtime db is in-memory (restored from file), so an index seek is the whole win.
-- **macOS shell:** `resetWindow()` (`swift/osx/src/candidates/InputController+window.swift`) builds the candidate `NSHostingController` **once** and only repositions it; the view observes `candidateViewModel` (`@Published`). Never rebuild the SwiftUI host per keystroke.
+- **macOS shell:** `ensureWindow()` (`swift/osx/src/candidates/InputController+window.swift`) builds the `NSWindow` + candidate `NSHostingController` **once** and pins the invariant leading constraint once; `resetWindow()` only repositions the frame and flips the vertical anchor (top/bottom) **when the side actually changes**. The view observes `candidateViewModel` (`@Published`), so content updates reactively. Never rebuild the host or all constraints per keystroke, and don't add tracking state beyond the one vertical constraint + its current side.
 
 ## macOS IME: install, TIS, "no menu" (read before touching `swift/osx` — these cost hours)
 
