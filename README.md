@@ -1,6 +1,8 @@
 # Khíín Taiwanese IME
 
-![CI Build & Test](https://github.com/aiongg/khiin-rs/actions/workflows/ci.yml/badge.svg?branch=master)
+![CI Build & Test](https://github.com/lostshin/khiin-rs-loover/actions/workflows/ci.yml/badge.svg?branch=master)
+
+**Languages:** English · [台語漢字 (Tâi-Hàn)](README-TAI-HAN.md) · [台羅 (Tâi-lô)](README-TAI-LO.md) · [台灣華語 (Mandarin)](README.zh-TW.md)
 
 **Khíín** is a cross-platform input method for typing Taiwanese. We aim to
 support all major platforms, including Windows, Android, macOS, iOS, Linux, and
@@ -10,6 +12,7 @@ experience.
 If you are interested in contributing, please open an issue!
 
 - [Khíín Taiwanese IME](#khíín-taiwanese-ime)
+  - [About this fork](#about-this-fork)
   - [Installation](#installation)
   - [Usage](#usage)
   - [Help](#help)
@@ -24,6 +27,24 @@ If you are interested in contributing, please open an issue!
   - [Development CLI App](#development-cli-app)
     - [Quickstart](#quickstart)
 
+
+## About this fork
+
+This repository is a fork of
+[`OMAMA-Taioan/khiin-rs`](https://github.com/OMAMA-Taioan/khiin-rs), focused on
+bringing the IME up on **macOS** and modernizing the settings app. It is
+currently **22 commits ahead of upstream**, with no upstream changes pending
+(60 files, +3216 / −449 lines). The core input engine is largely untouched — the
+work concentrates on the per-platform shells.
+
+| Area | What this fork adds |
+| --- | --- |
+| **macOS IME** (`swift/`) | Fixes IME registration, helper launch, version display, and the candidate-window lifecycle; adds a user-recordable mode-switch shortcut. The IME installs and is usable on macOS. |
+| **Settings app** (`app/`) | Migrates the Tauri backend from v1 to v2; adds a native macOS input-settings UI (segmented controls, a key-remap page). |
+| **Engine** (`khiin/`) | Adds a covering index on `key_sequences` to fix per-keystroke typing lag, plus reliable, append-only database migrations. |
+| **Docs** | Refreshed `CLAUDE.md` / `AGENTS.md` contributor guidance. |
+
+The version has advanced to **0.3.7**.
 
 ## Installation
 
@@ -47,7 +68,7 @@ khiin-rs/
 │   ├── app         # Jetpack Compose Android app
 │   └── rust        # JNI glue library for khiin
 ├── app/            # Settings & help app
-│   ├── frontned    # Svelte frontend
+│   ├── frontend    # Svelte frontend
 │   ├── settings    # Settings manager (Khiin.toml)
 │   └── src-tauri   # Tauri backend
 ├── cli/            # Terminal application (for developers)
@@ -103,7 +124,7 @@ frequency counts.
 
 The database is continually updated with user data during use, to improve
 candidate prediction based on a simple N-gram model that currently uses 1-gram
-and 2-gram frequencies. In the future this may be extended to other precition
+and 2-gram frequencies. In the future this may be extended to other prediction
 algorithms for better results.
 
 In addition to `khiin.db`, users may provide an additional custom dictionary
@@ -169,9 +190,15 @@ See the [android/README.md](android/README.md) for more details.
 
 ## iOS & macOS Apps
 
-The iOS and macOS apps are currently in progress / unstable. Basic setup between
-the Khiin engine and the apps is complete, so the remaining work is mainly to
-build out the UI and hook up all of the engine wiring.
+The **macOS IME is functional** in this fork: it installs as a system input
+method, shows a candidate window for selection, ships a native settings app, and
+supports a user-recordable mode-switch shortcut. It is usable for daily typing
+but still pre-release — a few engine commands (revert, emoji list, user-data
+reset) are not yet wired up.
+
+The **iOS app** is still in progress / unstable. Basic setup between the Khiin
+engine and the app is complete, so the remaining work is mainly to build out the
+UI and hook up the engine wiring.
 
 See the [swift/README.md](swift/README.md) for more details.
 
@@ -205,8 +232,8 @@ cargo install --force cargo-make
 Clone this repo and build it:
 
 ```
-git clone https://github.com/aiongg/khiin-rs.git
-cd khiin-rs
+git clone https://github.com/lostshin/khiin-rs-loover.git
+cd khiin-rs-loover
 cargo make build-cli
 ```
 
