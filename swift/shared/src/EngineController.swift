@@ -134,6 +134,13 @@ public class EngineController {
         return self.config?.outputMode == .hanji
     }
 
+    // The configured switch-mode shortcut spec (e.g. "default", a lone modifier
+    // like "MetaRight", or a combo like "Alt+Backquote"). Lets users without a
+    // ` / ~ key pick any key for toggling the input mode. Parsed by ModeShortcut.
+    public func inputModeShortcut() -> String {
+        return self.config?.inputModeShortcut ?? "default"
+    }
+
     public func changeInputMode() -> Khiin_Proto_Command? {
         if (self.config == nil) {
             log.debug("Config not instantiated")

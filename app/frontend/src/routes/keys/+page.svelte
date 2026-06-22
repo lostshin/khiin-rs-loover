@@ -18,6 +18,16 @@
     let hyphen_key = $settings.input_settings.hyphen;
     let khin_key = $settings.input_settings.khin;
     let done_key = $settings.input_settings.done;
+    type AssignmentKey =
+        | "t2"
+        | "t3"
+        | "t5"
+        | "t6"
+        | "t7_t8"
+        | "t9"
+        | "hyphen"
+        | "khin"
+        | "done";
 
     // Available keys for Telex: SFLJXW + DVR + YQZ
     const allKeys = ["s", "f", "l", "j", "x", "w", "d", "v", "r", "y", "q", "z"];
@@ -36,7 +46,7 @@
 
     $: allUsedKeys = Object.values(currentAssignments).filter((k) => k);
 
-    function getOptionsFor(fieldKey: string, _dependencies?: any) {
+    function getOptionsFor(fieldKey: AssignmentKey, _dependencies?: any) {
         const myCurrentValue = currentAssignments[fieldKey];
         return allKeys.filter((key) => {
             const isUsed = allUsedKeys.includes(key);
@@ -45,8 +55,8 @@
         });
     }
 
-    async function keySettingChanged(field: string, event) {
-        const newValue = event.target.value;
+    async function keySettingChanged(field: AssignmentKey, event: Event) {
+        const newValue = (event.currentTarget as HTMLSelectElement).value;
         settings.update((settings) => {
             switch (field) {
                 case "t2":

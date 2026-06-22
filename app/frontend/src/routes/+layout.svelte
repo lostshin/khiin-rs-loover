@@ -17,7 +17,7 @@
 
     async function loadSettings() {
         try {
-            const db_settings = await invoke("load_settings");
+            const db_settings = await invoke<string>("load_settings");
             const parsed = JSON.parse(db_settings);
             settings.set(parsed);
             if (parsed?.appearance?.locale) {

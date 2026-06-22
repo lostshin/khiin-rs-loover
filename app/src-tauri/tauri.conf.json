@@ -33,7 +33,7 @@
   },
   "productName": "khiin_helper",
   "mainBinaryName": "khiin_helper",
-  "version": "0.3.6",
+  "version": "0.3.7",
   "identifier": "app.khiin",
   "plugins": {},
   "app": {

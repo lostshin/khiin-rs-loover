@@ -8,9 +8,7 @@
     import SettingsGroup from "$lib/SettingsGroup.svelte";
     import SettingsRow from "$lib/SettingsRow.svelte";
     import Segmented from "$lib/Segmented.svelte";
-
-    const sel =
-        "rounded-md border border-gray-300 bg-white py-1 pl-2 pr-7 text-sm focus:border-gray-400 focus:outline-none focus:ring-1 focus:ring-gray-300 disabled:opacity-50 disabled:cursor-not-allowed";
+    import ShortcutRecorder from "$lib/ShortcutRecorder.svelte";
 
     let double_hyphen_to_khin = false;
     let auto_capitalization = false;
@@ -32,6 +30,22 @@
     let hyphen_key = $settings.input_settings.hyphen;
     let khin_key = $settings.input_settings.khin;
     let done_key = $settings.input_settings.done;
+    type AssignmentKey =
+        | "t2"
+        | "t3"
+        | "t5"
+        | "t6"
+        | "t7_t8"
+        | "t9"
+        | "hyphen"
+        | "khin"
+        | "done";
+    type InputSettingKey =
+        | "input_mode"
+        | "tone_mode"
+        | "output_mode"
+        | "khin_mode"
+        | "input_mode_shortcut";
 
     // Available keys for Telex: SFLJXW + DVR + YQZ
     const allKeys = [
@@ -63,7 +77,7 @@
 
     $: allUsedKeys = Object.values(currentAssignments).filter((k) => k);
 
-    function getOptionsFor(fieldKey: string, _dependencies?: any) {
+    function getOptionsFor(fieldKey: AssignmentKey, _dependencies?: any) {
         const myCurrentValue = currentAssignments[fieldKey];
 
         return allKeys.filter((key) => {
@@ -79,8 +93,8 @@
         tone_mode_disabled = false;
     }
 
-    async function toneModeChanged(event) {
-        const new_tone_mode = event.target.value;
+    async function toneModeChanged(event: Event) {
+        const new_tone_mode = (event.currentTarget as HTMLSelectElement).value;
         settings.update((settings) => {
             settings.input_settings.tone_mode = new_tone_mode;
             return settings;
@@ -88,8 +102,8 @@
         await updateSettings();
     }
 
-    async function inputModeChanged(event) {
-        const new_input_mode = event.target.value;
+    async function inputModeChanged(event: Event) {
+        const new_input_mode = (event.currentTarget as HTMLSelectElement).value;
         settings.update((settings) => {
             settings.input_settings.input_mode = new_input_mode;
             return settings;
@@ -98,8 +112,8 @@
         await updateSettings();
     }
 
-    async function outputModeChanged(event) {
-        const new_output_mode = event.target.value;
+    async function outputModeChanged(event: Event) {
+        const new_output_mode = (event.currentTarget as HTMLSelectElement).value;
         settings.update((settings) => {
             settings.input_settings.output_mode = new_output_mode;
             return settings;
@@ -107,8 +121,8 @@
         await updateSettings();
     }
 
-    async function khinModeChanged(event) {
-        const new_khin_mode = event.target.value;
+    async function khinModeChanged(event: Event) {
+        const new_khin_mode = (event.currentTarget as HTMLSelectElement).value;
         settings.update((settings) => {
             settings.input_settings.khin_mode = new_khin_mode;
             return settings;
@@ -116,8 +130,8 @@
         await updateSettings();
     }
 
-    async function modeShortcutChanged(event) {
-        const new_mode_shortcut = event.target.value;
+    async function modeShortcutChanged(event: Event) {
+        const new_mode_shortcut = (event.currentTarget as HTMLSelectElement).value;
         settings.update((settings) => {
             settings.input_settings.input_mode_shortcut = new_mode_shortcut;
             return settings;
@@ -125,8 +139,8 @@
         await updateSettings();
     }
 
-    async function keySettingChanged(field: string, event) {
-        const newValue = event.target.value;
+    async function keySettingChanged(field: AssignmentKey, event: Event) {
+        const newValue = (event.currentTarget as HTMLSelectElement).value;
 
         settings.update((settings) => {
             switch (field) {
@@ -166,7 +180,7 @@
 
     // Generic store update used by the macOS segmented controls. Keeps the
     // Windows <select> handlers (which read event.target.value) untouched.
-    async function setInputSetting(key, value) {
+    async function setInputSetting(key: InputSettingKey, value: string) {
         settings.update((settings) => {
             settings.input_settings[key] = value;
             return settings;
@@ -249,16 +263,13 @@
         label={$_("page.input.switch-mode")}
         description={$_("page.input.switch-mode-desc")}
     >
-        {#await invoke("is_windows") then is_windows_os}
-            <select class={sel} bind:value={mode_shortcut} on:change={modeShortcutChanged}>
-                {#if is_windows_os}
-                    <option value="default">{$_("page.input.ctrl-backtick")}</option>
-                    <option value="shift">{$_("page.input.shift")}</option>
-                {:else}
-                    <option value="default">{$_("page.input.alt-backtick")}</option>
-                {/if}
-            </select>
-        {/await}
+        <ShortcutRecorder
+            value={mode_shortcut}
+            onChange={(v) => {
+                mode_shortcut = v;
+                setInputSetting("input_mode_shortcut", v);
+            }}
+        />
     </SettingsRow>
 </SettingsGroup>
 
@@ -337,10 +348,11 @@
                 <option>{$_("page.input.ctrl-space")}</option>
             </select>
         </label> -->
-        <label class="block">
+        <div class="block">
             <span class="text-gray-700">{$_("page.input.switch-mode")}</span>
             {#await invoke("is_windows") then is_windows_os}
                 <select
+                    aria-label={$_("page.input.switch-mode")}
                     bind:value={mode_shortcut}
                     class="block w-full mt-1 rounded-md border-slate-300 shadow-sm focus:border-slate-300 focus:ring focus:ring-slate-200 focus:ring-opacity-50"
                     on:change={modeShortcutChanged}
@@ -357,7 +369,7 @@
                     {/if}
                 </select>
             {/await}
-        </label>
+        </div>
         <!-- <label class="inline-flex items-center">
             <Toggle bind:checked={convert_c_to_ch} />
             <span class="ml-2 text-gray-700"

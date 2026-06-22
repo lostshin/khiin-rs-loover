@@ -58,17 +58,20 @@ arbitrary application customizations.
 
 The recorder rejects:
 
-- Khíín output-mode shortcuts: `Option+H`, `Option+S`, `Option+L`, and
-  `Option+Space`.
-- macOS navigation and system defaults such as application/window switching,
-  Spotlight, input-source switching, Mission Control/Spaces, screenshots,
-  Force Quit, Lock Screen, log out, Hide, and Minimize.
-- common application operations such as Select All, Copy, Paste, Cut, Undo,
-  Redo, New, Open, Close, Save, Print, Find, Find Next, Preferences, and Quit.
+- Khíín output-mode shortcuts containing Option with `H`, `S`, `L`, or Space,
+  including variants with additional modifiers.
+- every Command-based combination, because Command is the standard macOS and
+  application shortcut modifier; lone left or right Command taps remain
+  available.
+- Control+Option combinations, which overlap the macOS VoiceOver modifier.
+- macOS input-source switching and standard Control text-editing combinations.
+- every key code outside the shared frontend/Swift allowlist, including
+  function, arrow, numpad, Backspace, and international-key codes.
 
-The list is based on physical W3C codes and normalized modifiers. Exact matches
-are rejected; adding an unrelated modifier does not collide unless that exact
-combination is also reserved.
+The policy is based on physical W3C codes and normalized modifiers. It is
+intentionally conservative: it prevents known system and application
+collisions but does not claim to discover shortcuts customized inside every
+installed application.
 
 ## Lone Modifier Tracking
 

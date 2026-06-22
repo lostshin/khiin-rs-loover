@@ -4,7 +4,7 @@
 
 **Goal:** Reject unsupported and conflicting macOS mode shortcuts and ensure only a genuinely lone physical modifier tap toggles input mode.
 
-**Architecture:** Put recorder validation in a pure TypeScript policy module so it can be unit-tested with Node and consumed by Svelte. Mirror the safety-critical parsing and reserved-combination checks in Swift so stale or manually edited settings cannot bypass the UI. Replace the controller Boolean with a pure Swift physical-key tracker.
+**Architecture:** Put recorder validation in a pure JSDoc-typed JavaScript policy module so it can be unit-tested with the repository's Node 20 runtime and consumed by Svelte. Mirror the safety-critical parsing and reserved-combination checks in Swift so stale or manually edited settings cannot bypass the UI. Replace the controller Boolean with a pure Swift physical-key tracker.
 
 **Tech Stack:** Svelte 3, TypeScript, Node 22 test runner, Swift 5.8+, AppKit/InputMethodKit, SwiftPM/XCTest
 
@@ -13,10 +13,10 @@
 ### Task 1: Define and test the frontend shortcut policy
 
 **Files:**
-- Create: `app/frontend/src/lib/ShortcutPolicy.ts`
-- Create: `app/frontend/src/lib/ShortcutPolicy.test.ts`
+- Create: `app/frontend/src/lib/ShortcutPolicy.js`
+- Create: `app/frontend/tests/ShortcutPolicy.test.js`
 - Modify: `app/frontend/package.json`
-- Test: `app/frontend/src/lib/ShortcutPolicy.test.ts`
+- Test: `app/frontend/tests/ShortcutPolicy.test.js`
 
 - [ ] **Step 1: Write failing policy tests**
 
@@ -28,7 +28,7 @@ import assert from "node:assert/strict";
 import {
     createShortcutToken,
     validateShortcut,
-} from "./ShortcutPolicy.ts";
+} from "../src/lib/ShortcutPolicy.js";
 
 test("normalizes modifier order", () => {
     assert.equal(
@@ -80,20 +80,17 @@ Run:
 
 ```bash
 cd app/frontend
-node --test src/lib/ShortcutPolicy.test.ts
+node --test tests/ShortcutPolicy.test.js
 ```
 
-Expected: failure because `ShortcutPolicy.ts` does not exist.
+Expected: failure because `ShortcutPolicy.js` does not exist.
 
 - [ ] **Step 3: Implement the minimal policy**
 
 Create exports for:
 
 ```ts
-export type ModifierName = "Control" | "Alt" | "Shift" | "Meta";
-export type ShortcutValidation =
-    | { ok: true; token: string }
-    | { ok: false; reason: "unsupported" | "reserved" };
+/** @typedef {"Control" | "Alt" | "Shift" | "Meta"} ModifierName */
 
 export const MODIFIER_CODES = new Set([
     "ShiftLeft", "ShiftRight", "ControlLeft", "ControlRight",
@@ -115,25 +112,19 @@ The supported-code allowlist must exactly match the Swift W3C map: `KeyA`–`Key
 `Digit0`–`Digit9`, Backquote, Minus, Equal, BracketLeft, BracketRight,
 Backslash, Semicolon, Quote, Comma, Period, Slash, Space, Enter, and Tab.
 
-The reserved set must include:
+The reserved policy must reject:
 
 ```ts
-[
-    "Alt+KeyH", "Alt+KeyS", "Alt+KeyL", "Alt+Space",
-    "Control+Space", "Control+Alt+Space",
-    "Meta+KeyA", "Meta+KeyC", "Meta+KeyF", "Meta+KeyG",
-    "Meta+KeyH", "Meta+KeyM", "Meta+KeyN", "Meta+KeyO",
-    "Meta+KeyP", "Meta+KeyQ", "Meta+KeyS", "Meta+KeyT",
-    "Meta+KeyV", "Meta+KeyW", "Meta+KeyX", "Meta+KeyZ",
-    "Shift+Meta+KeyG", "Shift+Meta+KeyZ",
-    "Alt+Meta+KeyH", "Alt+Meta+KeyM", "Alt+Meta+KeyW",
-    "Meta+Space", "Alt+Meta+Space", "Control+Meta+Space",
-    "Control+Meta+KeyF", "Control+Meta+KeyQ",
-    "Meta+Tab", "Meta+Backquote", "Meta+Comma",
-    "Shift+Meta+Digit3", "Shift+Meta+Digit4", "Shift+Meta+Digit5",
-    "Shift+Meta+KeyQ", "Alt+Shift+Meta+KeyQ",
-]
+modifiers.includes("Alt") && ["KeyH", "KeyS", "KeyL", "Space"].includes(code)
+modifiers.includes("Meta")
+modifiers.includes("Control") && modifiers.includes("Alt")
+modifiers.includes("Control") && (
+    code === "Space" || MACOS_CONTROL_TEXT_CODES.has(code)
+)
 ```
+
+where `MACOS_CONTROL_TEXT_CODES` covers the standard macOS text-navigation and
+editing keys documented by Apple.
 
 - [ ] **Step 4: Run the focused test and verify GREEN**
 
@@ -141,7 +132,7 @@ Run:
 
 ```bash
 cd app/frontend
-node --test src/lib/ShortcutPolicy.test.ts
+node --test tests/ShortcutPolicy.test.js
 ```
 
 Expected: all policy tests pass.
@@ -151,7 +142,7 @@ Expected: all policy tests pass.
 Add:
 
 ```json
-"test:shortcuts": "node --test src/lib/ShortcutPolicy.test.ts"
+"test:shortcuts": "node --test tests/ShortcutPolicy.test.js"
 ```
 
 to `app/frontend/package.json`.
@@ -250,8 +241,10 @@ Reject unknown modifier names, duplicate modifiers, normal keys without a
 modifier, unknown W3C codes, and reserved combinations. Preserve `default`,
 empty-string compatibility, `shift`, and supported lone modifier codes.
 
-Mirror the frontend reserved set using normalized token strings. Do not mark
-`Alt+Backquote` as reserved because it is the product default.
+Mirror the frontend rules: reject Khíín Option conflicts even with extra
+modifiers, every Command-based combination, Control+Option combinations, input
+source switching, and standard macOS Control text-editing keys. Do not reject
+`Alt+Backquote` because it is the product default.
 
 - [ ] **Step 4: Safely consume optional parsing**
 
@@ -366,7 +359,7 @@ Expected: both commands exit successfully.
 Run:
 
 ```bash
-git diff HEAD -- app/frontend/src/lib/ShortcutPolicy.ts app/frontend/src/lib/ShortcutPolicy.test.ts app/frontend/src/lib/ShortcutRecorder.svelte app/frontend/package.json app/frontend/src/locales/en.json app/frontend/src/locales/oan_Han.json app/frontend/src/locales/oan_Latn.json swift/osx/src/keys/ModeShortcut.swift swift/osx/src/keys/LoneModifierTapTracker.swift swift/osx/src/controller/InputController.swift swift/osx/src/controller/InputController+handler.swift swift/osx/Tests/ModeShortcutTests.swift swift/osx/Tests/LoneModifierTapTrackerTests.swift
+git diff HEAD -- app/frontend/src/lib/ShortcutPolicy.js app/frontend/tests/ShortcutPolicy.test.js app/frontend/src/lib/ShortcutRecorder.svelte app/frontend/package.json app/frontend/src/locales/en.json app/frontend/src/locales/oan_Han.json app/frontend/src/locales/oan_Latn.json swift/osx/src/keys/ModeShortcut.swift swift/osx/src/keys/LoneModifierTapTracker.swift swift/osx/src/controller/InputController.swift swift/osx/src/controller/InputController+handler.swift swift/osx/Tests/ModeShortcutTests.swift swift/osx/Tests/LoneModifierTapTrackerTests.swift
 ```
 
 Expected: the diff contains only validation, conflict feedback, strict parsing,

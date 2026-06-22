@@ -12,6 +12,10 @@ class KhiinInputController: IMKInputController {
     var candidateVerticalConstraint: NSLayoutConstraint? = nil
     var candidateAnchoredTop: Bool? = nil
 
+    // Tracks the physical modifier key(s) in a lone-modifier shortcut so using
+    // both sides, another modifier, or a normal key cancels the pending toggle.
+    var loneModifierTapTracker = LoneModifierTapTracker()
+
     lazy var currentClient: IMKTextInput? = nil {
         didSet {
             if window != nil {
@@ -120,6 +124,10 @@ class KhiinInputController: IMKInputController {
 
     func isHanjiFirst() -> Bool {
         return EngineController.instance.isHanjiFirst();
+    }
+
+    func inputModeShortcut() -> String {
+        return EngineController.instance.inputModeShortcut();
     }
 
     func isHyphenOrKhinKey(_ char: String) -> Bool {

@@ -2,13 +2,60 @@ import InputMethodKit
 
 extension KhiinInputController {
     override func recognizedEvents(_ sender: Any!) -> Int {
-        let masks: NSEvent.EventTypeMask = [.keyDown]
+        // .flagsChanged is needed so a lone-modifier switch-mode shortcut can
+        // detect a tap, which never produces a .keyDown event.
+        let masks: NSEvent.EventTypeMask = [.keyDown, .flagsChanged]
         return Int(masks.rawValue)
     }
 
+    // When the configured switch-mode shortcut is a lone modifier (e.g. a tap of
+    // right ⌘, for keyboards with no ` / ~ key), tapping that modifier on its own
+    // — pressed and released with no other key in between — toggles the input
+    // mode, mirroring the Windows lone-Shift behavior.
+    private func handleFlagsChanged(_ event: NSEvent, client sender: Any!) -> Bool {
+        guard let lone = ModeShortcut.parse(self.inputModeShortcut())?.loneModifierKeys else {
+            self.loneModifierTapTracker.reset()
+            return false
+        }
+
+        self.loneModifierTapTracker.configure(targetKeyCodes: lone.keyCodes)
+        let isTargetKey = lone.keyCodes.contains(event.keyCode)
+        let otherModifiers = event.modifierFlags
+            .intersection([.command, .control, .option, .shift])
+            .subtracting(lone.flag)
+
+        guard isTargetKey else {
+            // Another modifier changed; cancel the pending toggle.
+            self.loneModifierTapTracker.cancel()
+            return false
+        }
+
+        let shouldToggle = self.loneModifierTapTracker.handleTargetKeyChange(
+            keyCode: event.keyCode)
+        if !otherModifiers.isEmpty {
+            self.loneModifierTapTracker.cancel()
+            return false
+        }
+
+        if shouldToggle {
+            _ = self.commitAll()
+            self.candidateViewModel.changeInputMode()
+            self.reset()
+            (sender as? IMKTextInput)?.clearMarkedText()
+        }
+        return false
+    }
+
     override func handle(_ event: NSEvent!, client sender: Any!) -> Bool {
+        guard let event = event else { return false }
+        if event.type == .flagsChanged {
+            return self.handleFlagsChanged(event, client: sender)
+        }
+        // Any real key press cancels a pending lone-modifier toggle.
+        self.loneModifierTapTracker.cancel()
         let modifiers = event.modifierFlags
-        let changeInputMode = modifiers.contains(.option) && event.keyCode.representative == .punctuation("`")
+        let changeInputMode = ModeShortcut.parse(self.inputModeShortcut())?
+            .matchesKeyDown(keyCode: event.keyCode, modifiers: modifiers) ?? false
         let shouldIgnoreCurrentEvent: Bool =
             !changeInputMode && (modifiers.contains(.command) || modifiers.contains(.option))
         
